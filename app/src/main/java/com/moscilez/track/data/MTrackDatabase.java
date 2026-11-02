@@ -1,0 +1,4 @@
+package com.moscilez.track.data;
+import android.content.*; import androidx.room.*;
+@Database(entities={ActivitySession.class,ActivityPoint.class,ActivitySegment.class,UserProfile.class,Goal.class,UserSettings.class},version=2,exportSchema=false)
+public abstract class MTrackDatabase extends RoomDatabase { public abstract SessionDao sessions(); public abstract ProfileDao profiles(); public abstract PointDao points(); public abstract GoalDao goals(); public abstract SettingsDao settings(); private static volatile MTrackDatabase INSTANCE; public static MTrackDatabase get(Context c){ if(INSTANCE==null) synchronized(MTrackDatabase.class){if(INSTANCE==null) INSTANCE=Room.databaseBuilder(c.getApplicationContext(),MTrackDatabase.class,"mtrack.db").fallbackToDestructiveMigration().allowMainThreadQueries().build();} return INSTANCE; } }

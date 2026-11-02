@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.MTrack" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item><item name="android:colorAccent">#165DFF</item>
+        <item name="android:navigationBarColor">#FAFAF7</item><item name="android:statusBarColor">#FAFAF7</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

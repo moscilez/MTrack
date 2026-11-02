@@ -1,0 +1,4 @@
+package com.moscilez.track.data;
+import android.content.*; import java.io.*; import java.nio.charset.StandardCharsets; import java.util.*;
+/** Minimal, inspectable JSON-like export. It is local-only and suitable for sharing through Android's document picker. */
+public final class LocalExport { private LocalExport(){} public static File write(Context c,MTrackDatabase db)throws IOException{File f=new File(c.getExternalFilesDir(null),"mtrack-export-"+System.currentTimeMillis()+".csv");try(Writer w=new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)){w.write("type,startedAt,endedAt,durationMs,distanceMeters,avgSpeed,maxSpeed,note\n");for(ActivitySession s:db.sessions().all())w.write(csv(s.type)+","+s.startedAt+","+s.endedAt+","+s.durationMs+","+s.distanceMeters+","+s.avgSpeed+","+s.maxSpeed+","+csv(s.note)+"\n");}return f;} private static String csv(String x){return "\""+(x==null?"":x.replace("\"","\"\""))+"\"";} }

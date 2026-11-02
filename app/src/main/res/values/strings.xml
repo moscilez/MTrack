@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MTrack</string><string name="dashboard">Dashboard</string><string name="history">History</string><string name="profile">Profile</string>
+    <string name="start_activity">Start activity</string><string name="welcome">Local movement tracker</string><string name="today">Today</string>
+</resources>

@@ -1,10 +1,37 @@
 package com.moscilez.track.domain;
-import android.location.Location; import com.moscilez.track.data.ActivityPoint; import java.util.*;
+
+import com.moscilez.track.data.ActivityPoint;
+import java.util.List;
+
+/** Pure calculations shared by the recorder, route view and tests. Speeds are km/h. */
 public final class TrackMetrics {
- private TrackMetrics(){}
- public static void addPoint(List<ActivityPoint> points, Location l, long sessionId){ActivityPoint p=new ActivityPoint();p.sessionId=sessionId;p.latitude=l.getLatitude();p.longitude=l.getLongitude();p.altitude=l.hasAltitude()?l.getAltitude():0;p.speed=l.hasSpeed()?l.getSpeed():0;p.accuracy=l.hasAccuracy()?l.getAccuracy():0;p.timestamp=l.getTime();points.add(p);}
- public static double distance(List<ActivityPoint> ps){double total=0;float[] r=new float[1];for(int i=1;i<ps.size();i++){Location.distanceBetween(ps.get(i-1).latitude,ps.get(i-1).longitude,ps.get(i).latitude,ps.get(i).longitude,r);if(r[0]>=1&&r[0]<1000)total+=r[0];}return total;}
- public static double maxSpeed(List<ActivityPoint> ps){double max=0;for(ActivityPoint p:ps)max=Math.max(max,p.speed);return max;}
- public static double averageSpeed(List<ActivityPoint> ps){if(ps.size()<2)return 0;long t=ps.get(ps.size()-1).timestamp-ps.get(0).timestamp;return t<=0?0:distance(ps)/(t/3600000d);}
- public static double elevationGain(List<ActivityPoint> ps){double gain=0;for(int i=1;i<ps.size();i++){double d=ps.get(i).altitude-ps.get(i-1).altitude;if(d>1&&d<100)gain+=d;}return gain;}
+ private TrackMetrics() {}
+ public static double meters(ActivityPoint a, ActivityPoint b) {
+  double p1=Math.toRadians(a.latitude), p2=Math.toRadians(b.latitude);
+  double dp=p2-p1, dl=Math.toRadians(b.longitude-a.longitude);
+  double h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return 6371000*2*Math.asin(Math.sqrt(Math.min(1,h)));
+ }
+ public static boolean valid(ActivityPoint p) {
+  return Double.isFinite(p.latitude)&&Double.isFinite(p.longitude)&&Math.abs(p.latitude)<=90&&Math.abs(p.longitude)<=180
+   &&p.accuracy>0&&p.accuracy<=40&&p.timestamp>0;
+ }
+ public static double speedLimit(String type) { return "Cycling".equals(type)?30:12; }
+ public static boolean accept(ActivityPoint previous, ActivityPoint p, String type) {
+  if(!valid(p)) return false;
+  if(previous==null) return true;
+  long dt=p.timestamp-previous.timestamp;
+  if(dt<=0) return false;
+  // Re-anchor after a pause or prolonged loss; never measure across that gap.
+  if(p.segment!=previous.segment||dt>30000)return true;
+  double distance=meters(previous,p);
+  if(distance/(dt/1000d)>speedLimit(type)) return false;
+  return distance>=Math.max(3,Math.min(10,(p.accuracy+previous.accuracy)*0.25));
+ }
+ public static boolean connected(ActivityPoint a,ActivityPoint b) { return a.segment==b.segment&&b.timestamp>a.timestamp&&b.timestamp-a.timestamp<=30000; }
+ public static double distance(List<ActivityPoint> points) {
+  double total=0; for(int i=1;i<points.size();i++) if(connected(points.get(i-1),points.get(i))) total+=meters(points.get(i-1),points.get(i)); return total;
+ }
+ public static double averageSpeed(double meters,long durationMs) { return durationMs>0?meters*3600/durationMs:Double.NaN; }
+ public static double pace(double meters,long durationMs) { return meters>0&&durationMs>0?durationMs/meters:Double.NaN; }
 }

@@ -1,4 +1,3 @@
-.gradle/
-**/build/
-.idea/
-local.properties
+node_modules
+.env
+.expo

@@ -67,6 +67,10 @@ class SessionAccumulator(
     private var last: TrackPoint? = null
     private var count = 0
 
+    /** Latest speed in m/s, using coordinates when the provider omits speed. */
+    var currentSpeed = 0.0
+        private set
+
     private var maxSpeed = 0.0
     private var maxSpeedPeak: Peak? = null
 
@@ -96,6 +100,7 @@ class SessionAccumulator(
 
     fun add(p: TrackPoint) {
         val prev = last
+        currentSpeed = p.speed?.takeIf { it.isFinite() && it in 0.0..type.maxPlausibleSpeed } ?: 0.0
         count++
         currentAlt = p.altitude ?: currentAlt
         if (prev == null) {
@@ -110,7 +115,9 @@ class SessionAccumulator(
             val wallDt = (p.timestamp - prev.timestamp).coerceAtLeast(1)
             distance += d
             val derived = d / (wallDt / 1000.0)
-            val speed = p.speed ?: if (wallDt >= 2000) derived else null
+            val speed = (p.speed ?: if (wallDt >= 1000) derived else null)
+                ?.takeIf { it.isFinite() && it in 0.0..type.maxPlausibleSpeed }
+            currentSpeed = speed ?: 0.0
 
             if (speed != null && speed <= type.maxPlausibleSpeed && speed > maxSpeed) {
                 maxSpeed = speed

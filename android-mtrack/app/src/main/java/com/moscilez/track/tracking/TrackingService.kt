@@ -43,6 +43,7 @@ import com.moscilez.track.domain.model.ActivityType
 import com.moscilez.track.domain.model.SessionStatus
 import com.moscilez.track.domain.track.FilterResult
 import com.moscilez.track.domain.track.GpsFilter
+import com.moscilez.track.domain.track.RejectReason
 import com.moscilez.track.domain.track.SessionAccumulator
 import com.moscilez.track.domain.track.TrackPoint
 import com.moscilez.track.domain.track.TrackMath
@@ -298,14 +299,19 @@ class TrackingService : Service() {
                 holder.update {
                     val route = RoutePreview.append(it.route, LatLon(point.lat, point.lon))
                     it.copy(
-                        distanceM = sum.distanceM, currentSpeed = speed ?: 0.0, maxSpeed = sum.maxSpeed,
+                        distanceM = sum.distanceM, currentSpeed = accumulator!!.currentSpeed, maxSpeed = sum.maxSpeed,
                         altitude = point.altitude ?: it.altitude, elevationGain = sum.elevationGain,
                         route = route, acceptedPoints = it.acceptedPoints + 1,
                     )
                 }
                 if (buffer.size >= 25 || System.currentTimeMillis() - lastFlush > 15_000) flush()
             }
-            is FilterResult.Rejected -> holder.update { it.copy(rejectedPoints = it.rejectedPoints + 1, currentSpeed = speed ?: it.currentSpeed) }
+            is FilterResult.Rejected -> holder.update {
+                it.copy(
+                    rejectedPoints = it.rejectedPoints + 1,
+                    currentSpeed = if (r.reason == RejectReason.JITTER) speed ?: 0.0 else it.currentSpeed,
+                )
+            }
             null -> Unit
         }
         maybeNotify()

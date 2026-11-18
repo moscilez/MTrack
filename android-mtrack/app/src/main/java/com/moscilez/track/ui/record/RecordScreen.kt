@@ -349,12 +349,19 @@ private fun VehicleRecord(t: LiveTracking, s: UserSettingsEntity, now: Long, onC
             VDivider(Modifier.fillMaxHeight()); Spacer(Modifier.width(16.dp))
             MetricBlock(stringResource(R.string.metric_max), Formatters.speedValue(ctx, t.maxSpeed, units), Formatters.speedUnit(ctx, units), Modifier.weight(1f), Num.m)
         }
-        Spacer(Modifier.weight(1f))
-        Caption(stringResource(R.string.car_not_certified), modifier = Modifier.padding(bottom = 12.dp))
-        Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SecondaryButton(stringResource(if (paused) R.string.action_resume else R.string.action_pause), onPause, Modifier.weight(1f))
-            HoldToFinish(Modifier.weight(1f), onFinish = onStop, onAccessibleClick = { confirm = true })
+        Spacer(Modifier.weight(0.5f))
+        Row(
+            Modifier.fillMaxWidth().height(72.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SecondaryButton(
+                stringResource(if (paused) R.string.action_resume else R.string.action_pause),
+                onPause,
+                Modifier.weight(1f).fillMaxHeight(),
+            )
+            HoldToFinish(Modifier.weight(1f).fillMaxHeight(), onFinish = onStop, onAccessibleClick = { confirm = true })
         }
+        Spacer(Modifier.weight(0.5f))
     }
     if (confirm) {
         ConfirmDialog(
